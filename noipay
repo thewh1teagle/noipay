@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+
+import pickle
+import argparse
+import time
+import sys
+from os.path import expanduser
+from datetime import date, datetime, timedelta
+from loguru import logger
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+
+def confirm_hosts(user, password, headless):
+
+    if headless == None:
+        headless = False
+    elif headless == True:
+        logger.info("Starting in headless mode")
+
+    options = Options()
+    options.headless = headless
+    driver = webdriver.Firefox(options=options)
+
+
+    logger.info("Opening login url")
+    driver.get('https://www.noip.com/login')
+    time.sleep(5)
+    # Login
+    logger.info("Filling login credintials")
+    user_element = driver.find_elements_by_xpath("/html/body/section[1]/section/div/div/div/div[1]/div/div[2]/form/input[2]")
+    if isinstance(user_element, list):
+        user_element = user_element[0]
+    user_element.send_keys(user)
+    pass_element = driver.find_element_by_xpath("/html/body/section[1]/section/div/div/div/div[1]/div/div[2]/form/input[3]")
+    pass_element.send_keys(password)
+    log_in_button = driver.find_element_by_xpath("/html/body/section[1]/section/div/div/div/div[1]/div/div[2]/form/button")
+    logger.info("Clicking login button")
+    log_in_button.click()
+    time.sleep(5)
+
+
+    # Navigate to hosts
+    logger.info("Opening hosts window")
+    hosts_element = driver.find_element_by_xpath("/html/body/div[1]/div/div[3]/div[1]/div[2]/div[1]/div[1]/div[1]/div/div/div/div/div")
+    hosts_element.click()
+    time.sleep(5)
+
+    # Find hosts to be confirmed and confirm
+    logger.info("Looking for hosts to be enabled..")
+    hosts_names_elements = driver.find_elements_by_xpath(('//a[@class="link-info cursor-pointer"]'))
+    hosts_names = [element.text for element in hosts_names_elements]
+    confirms_buttons = driver.find_elements_by_xpath("//button[text()='Confirm']")
+    
+    if not confirms_buttons:
+        logger.info(f"hosts {', '.join(hosts_names)} are already confirmed")
+    else:
+        for c, btn in enumerate(confirms_buttons):
+            try:
+                btn.click()
+                logger.info(f"host {hosts_names[c-1]} confirmed")
+            except Exception as e:
+                logger.error(f"error when trying to confirm host {hosts_names[c-1]}")
+
+def get_last_confirm() -> any:
+    home = expanduser("~")
+    try:
+        with open(home + '/.config/last_noipay_running.date', 'rb') as fp:
+            return pickle.load(fp) 
+    except FileNotFoundError:
+        return None
+
+def update_last_confirm() -> None:
+    home = expanduser("~")
+    with open(home + '/.config/last_noipay_running.date', 'wb') as fp:
+        pickle.dump(datetime.now(), fp) 
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--last_confirm', required=False, action='store_true')
+    parser.add_argument('--headless', required=False, action='store_true')
+    parser.add_argument('--user', required=True)
+    parser.add_argument('--password', required=True)
+    
+
+    args = parser.parse_args()
+
+    if args.last_confirm:
+        logger.info(f'Last confirm: {get_last_confirm()}')
+
+    last_running = get_last_confirm()
+    if last_running:
+        if last_running < datetime.now() - timedelta(days=1):
+            confirm_hosts(args.user, args.password, args.headless)
+            update_last_confirm()
+        else:
+            logger.info(f"Script already runned in last day, last confirm: {get_last_confirm()}")
+    else:
+        confirm_hosts(args.user, args.password, args.headless)
+        update_last_confirm()
