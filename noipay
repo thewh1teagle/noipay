@@ -8,19 +8,24 @@ from os.path import expanduser
 from datetime import date, datetime, timedelta
 from loguru import logger
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.options import Options as firefox_Options
+from selenium.webdriver.chrome.options import Options as chrome_Options
 
-def confirm_hosts(user, password, headless):
+def confirm_hosts(user, password, headless, browser_driver):
 
     if headless == None:
         headless = False
     elif headless == True:
         logger.info("Starting in headless mode")
 
-    options = Options()
-    options.headless = headless
-    driver = webdriver.Firefox(options=options)
-
+    if browser_driver == 'firefox':
+        options = firefox_Options()
+        options.headless = headless
+        driver = webdriver.Firefox(options=options)
+    else:
+        options = chrome_Options()
+        options.headless = headless
+        driver = webdriver.Chrome(options=options)
 
     logger.info("Opening login url")
     driver.get('https://www.noip.com/login')
@@ -81,12 +86,19 @@ if __name__ == '__main__':
     parser.add_argument('--headless', required=False, action='store_true')
     parser.add_argument('--user', required=True)
     parser.add_argument('--password', required=True)
+    parser.add_argument('--driver', required=False)
     
 
     args = parser.parse_args()
 
     if args.last_confirm:
         logger.info(f'Last confirm: {get_last_confirm()}')
+
+    if args.driver == None:
+        browser_driver = 'chrome'
+    else:
+        browser_driver = args.driver
+    
 
     last_running = get_last_confirm()
     if last_running:
@@ -96,5 +108,5 @@ if __name__ == '__main__':
         else:
             logger.info(f"Script already runned in last day, last confirm: {get_last_confirm()}")
     else:
-        confirm_hosts(args.user, args.password, args.headless)
+        confirm_hosts(args.user, args.password, args.headless, browser_driver=browser_driver)
         update_last_confirm()
