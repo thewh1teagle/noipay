@@ -1,31 +1,21 @@
 #!/usr/bin/env python3
 
+from typing import Union
 import pickle
 import argparse
 import time
 import sys
 from os.path import expanduser
-from datetime import date, datetime, timedelta
+import datetime
 from loguru import logger
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as firefox_Options
 from selenium.webdriver.chrome.options import Options as chrome_Options
 
-def confirm_hosts(user, password, headless, browser_driver):
-
-    if headless == None:
-        headless = False
-    elif headless == True:
-        logger.info("Starting in headless mode")
-
-    if browser_driver == 'firefox':
-        options = firefox_Options()
-        options.headless = headless
-        driver = webdriver.Firefox(options=options)
-    else:
-        options = chrome_Options()
-        options.headless = headless
-        driver = webdriver.Chrome(options=options)
+def confirm_hosts(user: str, password: str, driver: webdriver) -> None:
+    """  
+    Here the whole logic is going. selenium open the hosts location and confirms hosts.
+    """
 
     logger.info("Opening login url")
     driver.get('https://www.noip.com/login')
@@ -66,14 +56,18 @@ def confirm_hosts(user, password, headless, browser_driver):
     if not confirms_buttons:
         logger.info(f"hosts {', '.join(hosts_names)} are already confirmed")
     else:
-        for c, btn in enumerate(confirms_buttons):
+        for c, btn in enumerate(confirms_buttons): # c - counter [ from 0 ]
             try:
                 btn.click()
                 logger.info(f"host {hosts_names[c]} confirmed")
             except Exception as e:
-                logger.error(f"error when trying to confirm host {hosts_names[c-1]}")
+                logger.error(f"error when trying to confirm host {hosts_names[c]}")
+    update_last_confirm()
 
-def get_last_confirm() -> any:
+def get_last_confirm() -> Union[datetime.datetime, None]:
+    """
+    Get the last date when the hosts confirmed using this script.
+    """
     home = expanduser("~")
     try:
         with open(home + '/.config/last_noipay_running.date', 'rb') as fp:
@@ -82,38 +76,46 @@ def get_last_confirm() -> any:
         return None
 
 def update_last_confirm() -> None:
+    """ Update the last date when the hosts confirmed using this script. """
     home = expanduser("~")
     with open(home + '/.config/last_noipay_running.date', 'wb') as fp:
-        pickle.dump(datetime.now(), fp) 
+        pickle.dump(datetime.datetime.now(), fp) 
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--last_confirm', required=False, action='store_true')
-    parser.add_argument('--headless', required=False, action='store_true')
-    parser.add_argument('--user', required=True)
-    parser.add_argument('--password', required=True)
-    parser.add_argument('--driver', required=False)
+def main():
+    parser = argparse.ArgumentParser(description="Renew noip2 hosts")
+    parser.add_argument('--user', required=True, help="Noip2 user name")
+    parser.add_argument('--password', required=True, help="Noip2 password")
+    parser.add_argument('--last_confirm', required=False, action='store_true', help="Display last hosts confirm date of noipay", default=False)
+    parser.add_argument('--headless', required=False, action='store_true', help="Start browser in headless mode", default=False)
+    parser.add_argument('--driver', required=False, help="Choose which browser to use as selenium driver [chrome / firefox]", default="chrome")
     
-
     args = parser.parse_args()
 
     if args.last_confirm:
         logger.info(f'Last confirm: {get_last_confirm()}')
 
-    if args.driver == None:
-        browser_driver = 'chrome'
+
+    if args.headless:
+        logger.info("Starting in headless mode")
+
+    if args.driver == 'firefox':
+        options = firefox_Options()
+        options.headless = args.headless
+        driver = webdriver.Firefox(options=options)
     else:
-        browser_driver = args.driver
-    
+        options = chrome_Options()
+        options.headless = args.headless
+        driver = webdriver.Chrome(options=options)
 
     last_running = get_last_confirm()
-    if last_running:
-        if last_running < datetime.now() - timedelta(days=1):
-            confirm_hosts(args.user, args.password, args.headless)
-            update_last_confirm()
+    if last_running != None: # If the script already runned and the file already there
+        if last_running < datetime.datetime.now() - datetime.timedelta(days=1): # Check if script already running today
+            confirm_hosts(args.user, args.password, driver) # If not, then confirm hosts.
         else:
             logger.info(f"Script already runned in last day, last confirm: {get_last_confirm()}")
     else:
-        confirm_hosts(args.user, args.password, args.headless, browser_driver=browser_driver)
-        update_last_confirm()
+        confirm_hosts(args.user, args.password, driver)
+    
+
+if __name__ == '__main__':
+    main()
