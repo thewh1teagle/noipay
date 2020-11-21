@@ -88,7 +88,11 @@ def main():
     parser.add_argument('--last_confirm', required=False, action='store_true', help="Display last hosts confirm date of noipay", default=False)
     parser.add_argument('--headless', required=False, action='store_true', help="Start browser in headless mode", default=False)
     parser.add_argument('--driver', required=False, help="Choose which browser to use as selenium driver [chrome / firefox]", default="chrome")
-    
+   
+    if any(["--user" not in sys.argv or '--password' not in sys.argv]) and '--last_confirm' in sys.argv:
+        logger.info(f'Last confirm: {get_last_confirm()}')
+        sys.exit(0)
+
     args = parser.parse_args()
 
     if args.last_confirm:
