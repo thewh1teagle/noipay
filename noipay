@@ -22,15 +22,13 @@ def confirm_hosts(user: str, password: str, driver: webdriver) -> None:
     time.sleep(5)
     # Login
     logger.info("Filling login credintials")
-    user_element = driver.find_elements_by_xpath("/html/body/section[1]/section/div/div/div/div[1]/div/div[2]/form/input[2]")
-    if isinstance(user_element, list):
-        user_element = user_element[0]
+    user_element = driver.find_element_by_xpath('//input[@name="username"]')
     user_element.send_keys(user)
     time.sleep(0.5)
-    pass_element = driver.find_element_by_xpath("/html/body/section[1]/section/div/div/div/div[1]/div/div[2]/form/input[3]")
+    pass_element = driver.find_element_by_xpath('//input[@name="password"]')
     pass_element.send_keys(password)
     time.sleep(0.5)
-    log_in_button = driver.find_element_by_xpath("/html/body/section[1]/section/div/div/div/div[1]/div/div[2]/form/button")
+    log_in_button = driver.find_element_by_xpath('//button[@name="Login"]')
     logger.info("Clicking login button")
     time.sleep(0.1)
     log_in_button.click()
@@ -39,7 +37,7 @@ def confirm_hosts(user: str, password: str, driver: webdriver) -> None:
 
     # Navigate to hosts
     try:
-        hosts_element = driver.find_element_by_xpath("/html/body/div[1]/div/div[3]/div[1]/div[2]/div[1]/div[1]/div[1]/div/div/div/div/div")
+        hosts_element = driver.find_element_by_xpath('//span[text() = "Active"]')
     except:
         logger.error("Login failed.")
         sys.exit(1)
