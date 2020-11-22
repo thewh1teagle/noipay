@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
 
 from typing import Union
-import pickle
 import argparse
 import time
 import sys
-from os.path import expanduser
+import os
 import datetime
 from loguru import logger
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as firefox_Options
 from selenium.webdriver.chrome.options import Options as chrome_Options
+
+
+
+def datetime_now() -> str:
+    return datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
+
+def convert_back_to_date_time(strftime):
+    return datetime.datetime.strptime(strftime, "%Y-%m-%d %H:%M:%S")
+    
 
 def confirm_hosts(user: str, password: str, driver: webdriver) -> None:
     """  
@@ -39,8 +47,12 @@ def confirm_hosts(user: str, password: str, driver: webdriver) -> None:
     try:
         hosts_element = driver.find_element_by_xpath('//span[text() = "Active"]')
     except:
-        logger.error("Login failed.")
-        sys.exit(1)
+        try:
+            hosts_element = driver.find_element_by_xpath("//span[contains(text(), 'expiring in the next')]")
+        except:
+            logger.error("Login failed.")
+            sys.exit(1)
+
     logger.info("Opening hosts window")
     hosts_element.click()
     time.sleep(5)
@@ -66,18 +78,21 @@ def get_last_confirm() -> Union[datetime.datetime, None]:
     """
     Get the last date when the hosts confirmed using this script.
     """
-    home = expanduser("~")
+    home = os.path.expanduser("~")
+
     try:
-        with open(home + '/.config/last_noipay_running.date', 'rb') as fp:
-            return pickle.load(fp) 
-    except FileNotFoundError:
+        with open(home + '/.config/noipay/last_noipay_running.date', 'r') as fp:
+            return convert_back_to_date_time(fp.read()) 
+    except:
         return None
 
 def update_last_confirm() -> None:
     """ Update the last date when the hosts confirmed using this script. """
-    home = expanduser("~")
-    with open(home + '/.config/last_noipay_running.date', 'wb') as fp:
-        pickle.dump(datetime.datetime.now(), fp) 
+    home = os.path.expanduser("~")
+    if not os.path.exists(home + '/.config/noipay'):
+        os.makedirs(home + '/.config/noipay')
+    with open(home + '/.config/noipay/last_noipay_running.date', 'w') as fp:
+        fp.write(datetime_now())
 
 def main():
     parser = argparse.ArgumentParser(description="Renew noip2 hosts")
