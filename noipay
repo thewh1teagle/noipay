@@ -106,10 +106,17 @@ def main():
         logger.info(f'Last confirm: {get_last_confirm()}')
         sys.exit(0)
 
+    last_running = get_last_confirm()
+    if last_running != None: # If the script already runned and the file already there
+        if last_running > datetime.datetime.now() - datetime.timedelta(days=1): # Check if script already running today
+            logger.info(f"Script already runned in last day, last confirm: {get_last_confirm()}")
+            sys.exit(1)
+
     args = parser.parse_args()
 
     if args.last_confirm:
         logger.info(f'Last confirm: {get_last_confirm()}')
+        
 
 
     if args.headless:
@@ -124,14 +131,9 @@ def main():
         options.headless = args.headless
         driver = webdriver.Chrome(options=options)
 
-    last_running = get_last_confirm()
-    if last_running != None: # If the script already runned and the file already there
-        if last_running < datetime.datetime.now() - datetime.timedelta(days=1): # Check if script already running today
-            confirm_hosts(args.user, args.password, driver) # If not, then confirm hosts.
-        else:
-            logger.info(f"Script already runned in last day, last confirm: {get_last_confirm()}")
-    else:
-        confirm_hosts(args.user, args.password, driver)
+    confirm_hosts(args.user, args.password, driver)
+        
+        
     
 
 if __name__ == '__main__':
