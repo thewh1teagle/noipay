@@ -97,8 +97,16 @@ def update_last_confirm() -> None:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Renew noip2 hosts")
-    parser.add_argument('--user', '-u', required=True, help="Noip2 user name")
-    parser.add_argument('--password', '-p', required=True, help="Noip2 password")
+    parser.add_argument(
+        '--user', '-u', 
+        required = '-l' not in sys.argv, 
+        help = "Noip2 user name"
+    )
+    parser.add_argument(
+        '--password', '-p', 
+        required = '-l' not in sys.argv, 
+        help = "Noip2 password"
+    )
     parser.add_argument(
         '--last_confirm', '-l',
         required = False,
@@ -111,7 +119,7 @@ if __name__ == '__main__':
         required = False,
         action = 'store_true',
         help = "Start browser in headless mode",
-        default = False
+        default = True
     )
     parser.add_argument(
         '--driver', '-d',
@@ -121,21 +129,19 @@ if __name__ == '__main__':
         choices = ['chrome', 'firefox'] 
     )
     
-    if "-u" not in sys.argv and '-l' in sys.argv:
-        logger.info(f'Last confirm: {get_last_confirm()}')
-        sys.exit(0)
-
-    last_running = get_last_confirm()
-    if last_running != None: # If the script already runned and the file already there
-        if last_running > datetime.datetime.now() - datetime.timedelta(days=1): # Check if script already running today
-            logger.info(f"Script already runned in last day, last confirm: {get_last_confirm()}")
-            sys.exit(1)
-
     args = parser.parse_args()
 
     if args.last_confirm:
         logger.info(f'Last confirm: {get_last_confirm()}')
-        
+        if not args.user:
+            sys.exit(0)
+
+    last_running = get_last_confirm()
+    if last_running: # If the script already runned and the file already there
+        if last_running > datetime.datetime.now() - datetime.timedelta(days=1): # Check if script already running today
+            logger.info(f"Script already runned in last day, last confirm: {get_last_confirm()}")
+            sys.exit(1)
+
 
 
     if args.headless:
