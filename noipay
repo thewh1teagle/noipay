@@ -48,7 +48,7 @@ def confirm_hosts(user: str, password: str, driver: webdriver) -> None:
         hosts_element = driver.find_element_by_xpath('//span[text() = "Active"]')
     except:
         try:
-            hosts_element = driver.find_element_by_xpath("//span[contains(text(), 'expiring in the next')]")
+            hosts_element = driver.find_element_by_xpath("//span[contains(@data-original-title, 'Our Free services requires you to confirm that you are')]")
         except:
             logger.error("Login failed.")
             sys.exit(1)
@@ -94,15 +94,34 @@ def update_last_confirm() -> None:
     with open(home + '/.config/noipay/last_noipay_running.date', 'w') as fp:
         fp.write(datetime_now())
 
-def main():
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Renew noip2 hosts")
-    parser.add_argument('--user', required=True, help="Noip2 user name")
-    parser.add_argument('--password', required=True, help="Noip2 password")
-    parser.add_argument('--last_confirm', required=False, action='store_true', help="Display last hosts confirm date of noipay", default=False)
-    parser.add_argument('--headless', required=False, action='store_true', help="Start browser in headless mode", default=False)
-    parser.add_argument('--driver', required=False, help="Choose which browser to use as selenium driver [chrome / firefox]", default="chrome")
-   
-    if any(["--user" not in sys.argv or '--password' not in sys.argv]) and '--last_confirm' in sys.argv:
+    parser.add_argument('--user', '-u', required=True, help="Noip2 user name")
+    parser.add_argument('--password', '-p', required=True, help="Noip2 password")
+    parser.add_argument(
+        '--last_confirm', '-l',
+        required = False,
+        action = 'store_true', 
+        help = "Display last hosts confirm date of noipay", 
+        default = False
+    )
+    parser.add_argument(
+        '--headless', 
+        required = False,
+        action = 'store_true',
+        help = "Start browser in headless mode",
+        default = False
+    )
+    parser.add_argument(
+        '--driver', '-d',
+        required = False,
+        help = "Choose which browser to use as selenium driver [chrome / firefox]",
+        default = "chrome",
+        choices = ['chrome', 'firefox'] 
+    )
+    
+    if any(["-u" not in sys.argv or '-p' not in sys.argv]) and '-l' in sys.argv:
         logger.info(f'Last confirm: {get_last_confirm()}')
         sys.exit(0)
 
@@ -132,9 +151,4 @@ def main():
         driver = webdriver.Chrome(options=options)
 
     confirm_hosts(args.user, args.password, driver)
-        
-        
     
-
-if __name__ == '__main__':
-    main()
