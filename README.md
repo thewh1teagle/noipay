@@ -1,6 +1,6 @@
 # Noipay
 
-## Renew no-ip ddns hosts automatically
+## Renew [No-IP](https://www.noip.com/) ddns hosts automatically
 
 - [Setup](#setup-tested-on-ubuntu-2004)
 - [Basic usage](#basic-usage)
