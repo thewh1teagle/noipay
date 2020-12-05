@@ -121,7 +121,7 @@ if __name__ == '__main__':
         choices = ['chrome', 'firefox'] 
     )
     
-    if any(["-u" not in sys.argv or '-p' not in sys.argv]) and '-l' in sys.argv:
+    if "-u" not in sys.argv and '-l' in sys.argv:
         logger.info(f'Last confirm: {get_last_confirm()}')
         sys.exit(0)
 
