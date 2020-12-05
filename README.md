@@ -2,6 +2,9 @@
 
 ## Renew no-ip ddns hosts automatically
 
+- [Setup](#setup-tested-on-ubuntu-2004)
+- [Basic usage](#basic-usage)
+- [Install](#install)
 
 ### Setup (Tested on ubuntu 20.04)
 Install necessary tools
