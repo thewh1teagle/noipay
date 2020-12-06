@@ -96,14 +96,14 @@ def update_last_confirm() -> None:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Renew noip2 hosts")
-    required_named = parser.add_argument_group('required arguments')
-    required_named.add_argument(
+    parser = argparse.ArgumentParser(description="Renew No-IP hosts")
+    required_args = parser.add_argument_group('required arguments')
+    required_args.add_argument(
         '-u', '--user', 
         required = '-l' not in sys.argv, 
         help = "Noip2 user name"
     )
-    required_named.add_argument(
+    required_args.add_argument(
         '-p', '--password', 
         required = '-l' not in sys.argv, 
         help = "Noip2 password"
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-d', '--driver',
         required = False,
-        help = "Choose which browser to use as selenium driver [chrome / firefox]",
+        help = "Choose which browser to use as selenium driver (default: %(default)s)",
         default = "chrome",
         choices = ['chrome', 'firefox'] 
     )
@@ -137,14 +137,6 @@ if __name__ == '__main__':
         logger.info(f'Last confirm: {get_last_confirm()}')
         if not args.user:
             sys.exit(0)
-
-    last_running = get_last_confirm()
-    if last_running: # If the script already runned and the file already there
-        if last_running > datetime.datetime.now() - datetime.timedelta(days=1): # Check if script already running today
-            logger.info(f"Script already runned in last day, last confirm: {get_last_confirm()}")
-            sys.exit(1)
-
-
 
     if args.headless:
         logger.info("Starting in headless mode")
