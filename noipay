@@ -51,7 +51,7 @@ def confirm_hosts(user: str, password: str, driver: webdriver) -> None:
             hosts_element = driver.find_element_by_xpath("//span[contains(@data-original-title, 'Our Free services requires you to confirm that you are')]")
         except:
             logger.error("Login failed.")
-            sys.exit(1)
+            return
 
     logger.info("Opening hosts window")
     hosts_element.click()
@@ -149,6 +149,12 @@ if __name__ == '__main__':
         options = chrome_Options()
         options.headless = args.headless
         driver = webdriver.Chrome(options=options)
+    try:
+        confirm_hosts(args.user, args.password, driver)
+    except Exception as e:
+        driver.quit()
+        print(e)
+        sys.exit(1)
+    driver.quit()
 
-    confirm_hosts(args.user, args.password, driver)
     
