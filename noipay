@@ -2,7 +2,6 @@
 
 from typing import Union
 import argparse
-import time
 import sys
 import os
 import datetime
@@ -27,20 +26,15 @@ def confirm_hosts(user: str, password: str, driver: webdriver) -> None:
 
     logger.info("Opening login url")
     driver.get('https://www.noip.com/login')
-    time.sleep(5)
     # Login
     logger.info("Filling login credintials")
     user_element = driver.find_element_by_xpath('//input[@name="username"]')
     user_element.send_keys(user)
-    time.sleep(0.5)
     pass_element = driver.find_element_by_xpath('//input[@name="password"]')
     pass_element.send_keys(password)
-    time.sleep(0.5)
     log_in_button = driver.find_element_by_xpath('//button[@name="Login"]')
     logger.info("Clicking login button")
-    time.sleep(0.1)
     log_in_button.click()
-    time.sleep(5)
 
 
     # Navigate to hosts
@@ -55,7 +49,6 @@ def confirm_hosts(user: str, password: str, driver: webdriver) -> None:
 
     logger.info("Opening hosts window")
     hosts_element.click()
-    time.sleep(5)
 
     # Find hosts to be confirmed and confirm
     logger.info("Looking for hosts to be enabled..")
